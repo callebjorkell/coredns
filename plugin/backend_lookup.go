@@ -18,6 +18,7 @@ func A(b ServiceBackend, zone string, state request.Request, previousRecords []d
 	if err != nil {
 		return nil, err
 	}
+	services = filterHosts(services)
 
 	dup := make(map[string]struct{})
 
@@ -85,6 +86,7 @@ func AAAA(b ServiceBackend, zone string, state request.Request, previousRecords 
 	if err != nil {
 		return nil, err
 	}
+	services = filterHosts(services)
 
 	dup := make(map[string]struct{})
 
@@ -154,6 +156,7 @@ func SRV(b ServiceBackend, zone string, state request.Request, opt Options) (rec
 	if err != nil {
 		return nil, nil, err
 	}
+	services = filterHosts(services)
 
 	dup := make(map[item]struct{})
 	lookup := make(map[string]struct{})
@@ -488,6 +491,21 @@ func isDuplicate(m map[item]struct{}, name, addr string, port uint16) bool {
 		m[item{name, port, ""}] = struct{}{}
 	}
 	return ok
+}
+
+// filterHosts is used to filter a slice of services and return a slice that only
+// contains services with a non-empty Host field.
+func filterHosts(services []msg.Service) []msg.Service {
+	var ret []msg.Service
+	if services == nil {
+		return ret
+	}
+	for _,s := range services {
+		if s.Host != "" {
+			ret = append(ret, s)
+		}
+	}
+	return ret
 }
 
 const hostmaster = "hostmaster"
